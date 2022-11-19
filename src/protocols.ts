@@ -31,11 +31,20 @@ export type RequestError = {
 };
 
 export type TicketsType = {
-    id: number,
-    name: string,
-    price: number,
-    isRemote: boolean,
-    includesHotel: boolean,
-    createdAt: Date,
-    updatedAt: Date,
+  id: number,
+  name: string,
+  price: number,
+  isRemote: boolean,
+  includesHotel: boolean,
+  createdAt: Date,
+  updatedAt: Date,
 }
+
+export type TicketsEntity = {
+  id: number
+  status: string
+  ticketTypeId: number,
+  enrollmentId: number,
+  createdAt: Date,
+  updatedAt: Date,
+} 
