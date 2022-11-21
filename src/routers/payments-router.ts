@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { authenticateToken } from "@/middlewares";
-import { getuserPayments } from "@/controllers";
+import { getUserPayments, postUserPayments } from "@/controllers";
 
 const paymentsRouter = Router();
 
 paymentsRouter
   .all("/*", authenticateToken)
-  .get("/", getuserPayments);
-//.post("/process", postUserPayment);
+  .get("/", getUserPayments)
+  .post("/process", postUserPayments);
 
 export { paymentsRouter };

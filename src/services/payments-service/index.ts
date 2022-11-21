@@ -1,25 +1,49 @@
-import enrollmentRepository from "@/repositories/enrollment-repository";
+import { PaymentEntity } from "./../../protocols";
+import { Payment } from "@prisma/client";
 import { notFoundError, unauthorizedError } from "@/errors";
 import paymentsRepository from "@/repositories/payments-repository";
+import ticketsRepository from "@/repositories/tickets-repository";
 
 async function listPaymentTicket(ticketId: number, userId: number) {
-  const ticket = await paymentsRepository.findPaymentByTicketId(ticketId);
-
-  if( !ticket ) {
-    throw notFoundError;
+  const isValidticket = await ticketsRepository.findUserTicketsByTicketId(ticketId);
+ 
+  if( !isValidticket ) {
+    throw notFoundError();
   }
+  if( isValidticket.Enrollment.userId !== userId ) {
+    throw unauthorizedError();
+  }
+  
+  return await paymentsRepository.findPaymentByTicketId(ticketId);
+}
 
-  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+async function InsertPayment(informations: PaymentEntity, userId: number) {
+  const isValidticket = await ticketsRepository.findUserTicketsByTicketId(informations.ticketId);
+  
+  if( !isValidticket ) {
+    throw notFoundError();
+  }
+  if( isValidticket.Enrollment.userId !== userId ) {
+    throw unauthorizedError();
+  }
+  const cardLastDigits: string = informations.cardData.number.toString().slice(-4); 
+  const paymentData: Omit<Payment, "id" | "createdAt" | "updatedAt"> =
+  {
+    ticketId: informations.ticketId,
+    value: isValidticket.TicketType.price,
+    cardIssuer: informations.cardData.issuer,
+    cardLastDigits: cardLastDigits,
+  };
 
-  if( userId !== enrollment.userId ) {
-    throw unauthorizedError;
-  } 
+  const ticket = await paymentsRepository.insertOnePayment(paymentData);
+  await paymentsRepository.updateStatusPayment(informations.ticketId);
 
   return ticket;
 }
 
 const paymentsService = {
-  listPaymentTicket
+  listPaymentTicket,
+  InsertPayment
 };
   
 export default paymentsService;
